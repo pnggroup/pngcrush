@@ -5,6 +5,7 @@
  * Portions Copyright (C) 2005 Greg Roelofs
  */
 
+#define _POSIX_C_SOURCE 199309L /* for clock_gettime */
 #define PNGCRUSH_VERSION "1.8.14"
 
 #undef BLOCKY_DEINTERLACE
@@ -1458,9 +1459,6 @@ static int copy_idat = 0; /* = 1 to simply copy the IDAT chunk data */
    set in pngwutil.c:
     10   encode filter setup
 */
-#undef _POSIX_C_SOURCE
-#define _POSIX_C_SOURCE 199309L /* for clock_gettime */
-
 #include <time.h>
 
 #ifdef CLOCKS_PER_SECOND
@@ -1844,8 +1842,6 @@ static unsigned long pngcrush_timer_min_nsec[PNGCRUSH_TIMERS];
 #    define png_memset  memset
 #  endif
 #endif /* PNGCRUSH_LIBPNG_VER >= 10500 */
-
-#if PNGCRUSH_LIBPNG_VER < 10800 || defined(PNGCRUSH_H)
 
 /* Changed in version 0.99 */
 #if PNGCRUSH_LIBPNG_VER < 99
@@ -5522,10 +5518,15 @@ int main(int argc, char *argv[])
                 {
                     /* We don't need to check IDAT CRC's and ADLER32 because
                      * they were already checked in the pngcrush_measure_idat
-                     * function
+                     * function.
+                     *
+                     * Recent versions of libpng do not include the ability to
+                     * ignore the zlib ADLER32
                      */
+#ifdef PNG_IGNORE_ADDLER32
                     png_set_option(read_ptr, PNG_IGNORE_ADLER32,
                         PNG_OPTION_ON);
+#endif
                     png_set_crc_action(read_ptr, PNG_CRC_QUIET_USE,
                                        PNG_CRC_QUIET_USE);
                 }
@@ -9321,5 +9322,3 @@ void print_usage(int retval)
 
     exit(retval);
 }
-
-#endif /* PNGCRUSH_LIBPNG_VER < 10800 || defined(PNGCRUSH_H) */
